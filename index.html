@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RankApp Demo</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --ink:#14212b; --muted:#5b6b78; --line:#dde3e8;
+  --brand:#0b7a4b; --brand-ink:#fff; --accent:#e8f5ee; --warn:#b45309; --warn-bg:#fef3c7;
+  --live:#dc2626; --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0e1419; --card:#18212a; --ink:#e8eef2; --muted:#93a3b0; --line:#2a3743;
+    --brand:#2fbf7f; --brand-ink:#06251a; --accent:#12301f; --warn:#fbbf24; --warn-bg:#3a2d08; --live:#f87171; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 16px}
+.wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+header .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:0}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.02em}
+.logo span{color:var(--brand)}
+.sub{color:var(--muted);font-size:14px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px}
+button:hover{border-color:var(--brand)}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.small{padding:4px 10px;font-size:14px}
+nav{display:flex;gap:6px;overflow-x:auto;padding:12px 0;scrollbar-width:thin}
+nav button{white-space:nowrap}
+nav button.active{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+main{padding:8px 0 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+h2{margin:0 0 4px;font-size:20px}
+h3{margin:18px 0 8px;font-size:16px}
+.hint{background:var(--accent);border-radius:8px;padding:10px 14px;margin:12px 0;font-size:15px}
+.hint.warn{background:var(--warn-bg);color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.tablewrap{overflow-x:auto}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600}
+.b-ok{background:var(--accent);color:var(--brand)}
+.b-pend{background:var(--warn-bg);color:var(--warn)}
+.b-live{background:var(--live);color:#fff}
+.b-done{background:var(--line);color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.stat{background:var(--bg);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px}
+.bracket{display:grid;grid-template-columns:repeat(3,minmax(170px,1fr));gap:18px;overflow-x:auto;padding-bottom:6px}
+.round h4{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.round{display:flex;flex-direction:column;justify-content:space-around;gap:12px}
+.m{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card);font-size:14px}
+.m div{padding:6px 10px;display:flex;justify-content:space-between;gap:8px}
+.m div+div{border-top:1px solid var(--line)}
+.m .w{font-weight:700;background:var(--accent)}
+.m .tbd{color:var(--muted);font-style:italic}
+.phone{max-width:360px;margin:0 auto;border:8px solid #1b2630;border-radius:34px;background:var(--bg);overflow:hidden}
+.phone .top{background:var(--brand);color:var(--brand-ink);padding:14px 16px}
+.phone .top b{display:block;font-size:17px}
+.phone .body{padding:12px;min-height:380px}
+.pm{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:14px}
+.pm .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:4px}
+.pm .pl{display:flex;justify-content:space-between}
+.pm .pl.w{font-weight:700}
+.up{color:var(--brand);font-weight:700}
+.dn{color:var(--live);font-weight:700}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:20px 16px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div>
+      <div class="logo">Rank<span>App</span> <span class="sub" style="font-weight:400;color:var(--muted)">· Demo</span></div>
+      <div class="sub" id="ligaName"></div>
+    </div>
+    <button id="reset">Reiniciar demo</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav id="tabs"></nav>
+  <main id="view"></main>
+</div>
+<footer>Maqueta de demostración. Todos los datos son ficticios y no se guardan.</footer>
+
+<script>
+/* ---------- Configuración editable ---------- */
+const LIGA = "Liga Demo de Tenis";
+const TORNEO = "Copa Ciudad 2026";
+const CATEGORIA = "Masculino Open";
+const CANCHAS = 3;
+const INICIO_MIN = 9 * 60;      // 09:00
+const DURACION_MIN = 90;
+const PTS_RONDA = [25, 45, 70]; // perdedor de cuartos, semifinal, final
+const PTS_CAMPEON = 100;
+const RONDAS = ["Cuartos de final", "Semifinal", "Final"];
+
+const BASE = [
+  {id:1,name:"Andrés Camacho",club:"Club Campestre",seed:1,base:420},
+  {id:2,name:"Julián Restrepo",club:"Club Colombia",seed:2,base:390},
+  {id:3,name:"Santiago Ospina",club:"Liga Norte",seed:3,base:340},
+  {id:4,name:"Mateo Villegas",club:"Club Los Cerros",seed:4,base:315},
+  {id:5,name:"Camilo Becerra",club:"Club Campestre",seed:null,base:260},
+  {id:6,name:"Esteban Lozano",club:"Academia Ace",seed:null,base:230},
+  {id:7,name:"Daniel Quintero",club:"Club Colombia",seed:null,base:205},
+  {id:8,name:"Nicolás Arango",club:"Liga Norte",seed:null,base:180}
+];
+
+/* ---------- Estado ---------- */
+let S, tab = 0, tick = 0;
+const TABS = ["1 · Torneo","2 · Inscripciones","3 · Sorteo","4 · Programación","5 · Vista pública","6 · Ranking"];
+
+function fresh(){
+  return { paid:{}, draw:null, nextSlot:0, updated:Date.now() };
+}
+S = fresh();
+
+const byId = id => BASE.find(p => p.id === id);
+const pname = id => id ? byId(id).name : null;
+const pad = n => String(n).padStart(2,"0");
+const hhmm = slot => { const t = INICIO_MIN + Math.floor(slot/CANCHAS)*DURACION_MIN; return pad(Math.floor(t/60))+":"+pad(t%60); };
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const touch = () => { S.updated = Date.now(); };
+
+/* ---------- Lógica ---------- */
+function allPaid(){ return BASE.every(p => S.paid[p.id]); }
+
+function doDraw(){
+  const slots = new Array(8);
+  const s34 = shuffle([3,4]);
+  const rest = shuffle([5,6,7,8]);
+  slots[0]=1; slots[6]=2; slots[2]=s34[0]; slots[4]=s34[1];
+  [1,3,5,7].forEach((pos,i)=> slots[pos]=rest[i]);
+  const matches = [];
+  for(let i=0;i<4;i++) matches.push({r:0,i,p1:slots[2*i],p2:slots[2*i+1],sets:null,winner:null,status:"pending",court:null,slot:null});
+  for(let i=0;i<2;i++) matches.push({r:1,i,p1:null,p2:null,sets:null,winner:null,status:"pending",court:null,slot:null});
+  matches.push({r:2,i:0,p1:null,p2:null,sets:null,winner:null,status:"pending",court:null,slot:null});
+  S.draw = matches; S.nextSlot = 0; touch();
+}
+
+const ready = m => m.p1 && m.p2;
+const getM = (r,i) => S.draw.find(m => m.r===r && m.i===i);
+
+function schedule(){
+  S.draw.filter(m => ready(m) && m.slot===null).forEach(m => {
+    m.slot = S.nextSlot; m.court = (S.nextSlot % CANCHAS) + 1; m.status = "scheduled"; S.nextSlot++;
+  });
+  touch();
+}
+
+function randSets(winnerIsP1){
+  const pick = () => { const l = Math.floor(Math.random()*5); return [6, l]; };
+  const tb = () => (Math.random()<.2 ? [7, 5 + Math.floor(Math.random()*2)] : pick());
+  const three = Math.random() < .4;
+  const sets = [];
+  const mk = (w) => { const [a,b] = tb(); return w ? [a,b] : [b,a]; };
+  if(!three){ sets.push(mk(winnerIsP1), mk(winnerIsP1)); }
+  else { sets.push(mk(winnerIsP1), mk(!winnerIsP1), mk(winnerIsP1)); }
+  return sets;
+}
+
+function startMatch(m){ m.status = "live"; touch(); }
+
+function finishMatch(m, forceP1){
+  const a = byId(m.p1), b = byId(m.p2);
+  const pa = (b.base) / (a.base + b.base) < .5 ? .75 : .25; // favorito por puntos
+  const p1wins = forceP1 !== undefined ? forceP1 : Math.random() < pa;
+  m.sets = randSets(p1wins);
+  m.winner = p1wins ? m.p1 : m.p2;
+  m.status = "done";
+  if(m.r < 2){
+    const next = getM(m.r+1, Math.floor(m.i/2));
+    if(m.i % 2 === 0) next.p1 = m.winner; else next.p2 = m.winner;
+  }
+  schedule(); touch();
+}
+
+function results(){
+  const res = {};
+  BASE.forEach(p => res[p.id] = {pts:0, round:null});
+  if(!S.draw) return res;
+  S.draw.filter(m => m.status==="done").forEach(m => {
+    const loser = m.winner === m.p1 ? m.p2 : m.p1;
+    res[loser].pts = PTS_RONDA[m.r]; res[loser].round = RONDAS[m.r];
+    if(m.r === 2){ res[m.winner].pts = PTS_CAMPEON; res[m.winner].round = "Campeón"; }
+  });
+  return res;
+}
+
+const champion = () => { const f = S.draw && getM(2,0); return f && f.winner ? f.winner : null; };
+const scoreStr = m => m.sets ? m.sets.map(s => s[0]+"-"+s[1]).join(" ") : "";
+
+/* ---------- Vistas ---------- */
+function viewTorneo(){
+  return `
+  <div class="card">
+    <h2>${TORNEO}</h2>
+    <div class="sub">${LIGA} · categoría ${CATEGORIA}</div>
+    <div class="grid3" style="margin-top:14px">
+      <div class="stat"><b>${BASE.length}</b>jugadores</div>
+      <div class="stat"><b>${CANCHAS}</b>canchas</div>
+      <div class="stat"><b>Eliminación directa</b>formato</div>
+    </div>
+    <div class="hint">RankApp gestiona el torneo de principio a fin. Este recorrido muestra el flujo completo con datos ficticios: <b>inscripción y pago → sorteo → programación en canchas → resultados en vivo → ranking</b>.</div>
+    <button class="primary" onclick="go(1)">Comenzar recorrido →</button>
+  </div>`;
+}
+
+function viewInscr(){
+  const n = BASE.filter(p => S.paid[p.id]).length;
+  const rows = BASE.map(p => `
+    <tr>
+      <td>${p.seed ? "<b>"+p.seed+"</b>" : "–"}</td>
+      <td>${p.name}</td><td>${p.club}</td><td>${p.base}</td>
+      <td>${S.paid[p.id] ? '<span class="badge b-ok">Pagado</span>' : '<span class="badge b-pend">Pendiente</span>'}</td>
+      <td><button class="small" onclick="togglePay(${p.id})">${S.paid[p.id] ? "Anular" : "Registrar pago"}</button></td>
+    </tr>`).join("");
+  return `
+  <div class="card">
+    <h2>Inscripciones y pagos</h2>
+    <div class="sub">${n} de ${BASE.length} inscripciones pagadas</div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Seed</th><th>Jugador</th><th>Club</th><th>Puntos</th><th>Pago</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="row">
+      <button onclick="payAll()">Marcar todos como pagados</button>
+      <button class="primary" ${allPaid() ? "" : "disabled"} onclick="go(2)">Continuar al sorteo →</button>
+    </div>
+    ${allPaid() ? "" : '<div class="hint warn">Solo los jugadores con pago confirmado entran al sorteo.</div>'}
+  </div>`;
+}
+
+function bracketHtml(){
+  const cols = [0,1,2].map(r => {
+    const ms = S.draw.filter(m => m.r===r).map(m => {
+      const line = (id, isW) => `<div class="${isW ? "w" : ""} ${id ? "" : "tbd"}"><span>${id ? (byId(id).seed ? "("+byId(id).seed+") " : "")+pname(id) : "Por definir"}</span></div>`;
+      return `<div class="m">${line(m.p1, m.winner && m.winner===m.p1)}${line(m.p2, m.winner && m.winner===m.p2)}${m.sets ? `<div style="font-size:12px;color:var(--muted)">${scoreStr(m)}</div>` : ""}</div>`;
+    }).join("");
+    return `<div class="round"><h4>${RONDAS[r]}</h4>${ms}</div>`;
+  }).join("");
+  return `<div class="bracket">${cols}</div>`;
+}
+
+function viewSorteo(){
+  if(!allPaid()) return `<div class="card"><h2>Sorteo</h2><div class="hint warn">Faltan pagos por registrar. Vuelve a Inscripciones.</div><button onclick="go(1)">← Inscripciones</button></div>`;
+  return `
+  <div class="card">
+    <h2>Sorteo del cuadro</h2>
+    <div class="sub">Los cabezas de serie 1 y 2 quedan en mitades opuestas; el resto se sortea.</div>
+    ${S.draw ? bracketHtml() : '<div class="hint">Aún no se ha realizado el sorteo.</div>'}
+    <div class="row">
+      <button class="primary" ${S.draw && S.draw.some(m=>m.status!=="pending") ? "disabled" : ""} onclick="${S.draw ? "redraw()" : "draw()"}">${S.draw ? "Repetir sorteo" : "Realizar sorteo"}</button>
+      <button ${S.draw ? "" : "disabled"} onclick="go(3)">Continuar a programación →</button>
+    </div>
+  </div>`;
+}
+
+function statusBadge(m){
+  if(m.status==="live") return '<span class="badge b-live">En juego</span>';
+  if(m.status==="done") return '<span class="badge b-done">Finalizado</span>';
+  if(m.status==="scheduled") return '<span class="badge b-ok">Programado</span>';
+  return '<span class="badge b-pend">Por definir</span>';
+}
+
+function viewProg(){
+  if(!S.draw) return `<div class="card"><h2>Programación</h2><div class="hint warn">Primero realiza el sorteo.</div><button onclick="go(2)">← Sorteo</button></div>`;
+  const unsched = S.draw.some(m => ready(m) && m.slot===null);
+  const sorted = S.draw.slice().sort((a,b) => (a.slot===null?999:a.slot) - (b.slot===null?999:b.slot) || a.r-b.r || a.i-b.i);
+  const rows = sorted.map(m => `
+    <tr>
+      <td>${RONDAS[m.r]}</td>
+      <td>${m.p1 ? pname(m.p1) : "<i>Por definir</i>"} vs ${m.p2 ? pname(m.p2) : "<i>Por definir</i>"}</td>
+      <td>${m.slot!==null ? "Cancha "+m.court+" · "+hhmm(m.slot) : "–"}</td>
+      <td>${statusBadge(m)}${m.sets ? " <small>"+scoreStr(m)+"</small>" : ""}</td>
+      <td>${m.status==="scheduled" ? `<button class="small" onclick="start(${S.draw.indexOf(m)})">Iniciar</button>` : ""}${m.status==="live" ? `<button class="small primary" onclick="finish(${S.draw.indexOf(m)})">Finalizar con resultado</button>` : ""}</td>
+    </tr>`).join("");
+  return `
+  <div class="card">
+    <h2>Programación en canchas</h2>
+    <div class="sub">${CANCHAS} canchas · partidos de ${DURACION_MIN} min desde las ${hhmm(0)}</div>
+    <div class="row">
+      <button class="primary" ${unsched ? "" : "disabled"} onclick="doSchedule()">Programar partidos disponibles</button>
+      <button onclick="go(4)">Ver vista del celular →</button>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Ronda</th><th>Partido</th><th>Cancha y hora</th><th>Estado</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="hint">Al finalizar un partido, el ganador avanza solo y su siguiente partido queda listo para programar.</div>
+  </div>`;
+}
+
+function viewPublic(){
+  const ms = S.draw ? S.draw.filter(m => ready(m)) : [];
+  const group = st => ms.filter(m => st.includes(m.status)).sort((a,b)=> (a.slot??0)-(b.slot??0));
+  const card = m => `
+    <div class="pm">
+      <div class="meta"><span>${RONDAS[m.r]}</span><span>${m.slot!==null ? "Cancha "+m.court+" · "+hhmm(m.slot) : ""}</span></div>
+      <div class="pl ${m.winner===m.p1 ? "w" : ""}"><span>${pname(m.p1)}</span><span>${m.sets ? m.sets.map(s=>s[0]).join(" ") : ""}</span></div>
+      <div class="pl ${m.winner===m.p2 ? "w" : ""}"><span>${pname(m.p2)}</span><span>${m.sets ? m.sets.map(s=>s[1]).join(" ") : ""}</span></div>
+    </div>`;
+  const sec = (t, list) => list.length ? `<h3 style="margin:6px 0">${t}</h3>${list.map(card).join("")}` : "";
+  const live = group(["live"]), next = group(["scheduled"]), done = group(["done"]);
+  const body = ms.length ? sec("En juego", live) + sec("Próximos", next) + sec("Finalizados", done)
+    : '<p class="sub" style="padding:20px 8px">Todavía no hay partidos publicados. Haz el sorteo y programa los partidos.</p>';
+  const ch = champion();
+  return `
+  <div class="card">
+    <h2>Vista pública (celular)</h2>
+    <div class="sub">Esto es lo que ven jugadores y público, sin iniciar sesión. Se actualiza solo.</div>
+    <div class="row"><button onclick="go(3)">← Programación</button><button class="primary" onclick="go(5)">Ver ranking →</button></div>
+    <div class="phone">
+      <div class="top"><b>${TORNEO}</b><span style="font-size:13px">${CATEGORIA} · actualizado hace <span id="ago">0</span> s</span></div>
+      <div class="body">${ch ? `<div class="pm" style="background:var(--accent)"><b>🏆 Campeón: ${pname(ch)}</b></div>` : ""}${body}</div>
+    </div>
+  </div>`;
+}
+
+function viewRanking(){
+  const res = results();
+  const list = BASE.map(p => ({...p, gain:res[p.id].pts, round:res[p.id].round, total:p.base+res[p.id].pts}));
+  const before = BASE.slice().sort((a,b)=>b.base-a.base).map(p=>p.id);
+  const after = list.slice().sort((a,b)=>b.total-a.total);
+  const rows = after.map((p,i) => {
+    const d = before.indexOf(p.id) - i;
+    const mv = d>0 ? `<span class="up">▲ ${d}</span>` : d<0 ? `<span class="dn">▼ ${-d}</span>` : "–";
+    return `<tr><td><b>${i+1}</b></td><td>${p.name}</td><td>${p.club}</td><td>${p.round || "–"}</td><td>+${p.gain}</td><td><b>${p.total}</b></td><td>${mv}</td></tr>`;
+  }).join("");
+  const done = S.draw && getM(2,0).status==="done";
+  return `
+  <div class="card">
+    <h2>Ranking ${CATEGORIA}</h2>
+    <div class="sub">Se recalcula con los resultados del torneo.</div>
+    ${done ? "" : '<div class="hint warn">El torneo no ha terminado: el ranking se completa al jugarse la final.</div>'}
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Jugador</th><th>Club</th><th>Resultado</th><th>Puntos torneo</th><th>Total</th><th>Cambio</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="hint">Puntos por ronda: cuartos ${PTS_RONDA[0]}, semifinal ${PTS_RONDA[1]}, final ${PTS_RONDA[2]}, campeón ${PTS_CAMPEON}. Las tablas se pueden exportar a Excel desde RankApp.</div>
+  </div>`;
+}
+
+const VIEWS = [viewTorneo, viewInscr, viewSorteo, viewProg, viewPublic, viewRanking];
+
+/* ---------- Acciones ---------- */
+function togglePay(id){ S.paid[id] = !S.paid[id]; if(S.draw && !allPaid()){ S.draw = null; } render(); }
+function payAll(){ BASE.forEach(p => S.paid[p.id] = true); render(); }
+function draw(){ doDraw(); render(); }
+function redraw(){ doDraw(); render(); }
+function doSchedule(){ schedule(); render(); }
+function start(i){ startMatch(S.draw[i]); render(); }
+function finish(i){ finishMatch(S.draw[i]); render(); }
+function go(n){ tab = n; render(); window.scrollTo({top:0}); }
+
+function render(){
+  document.getElementById("ligaName").textContent = LIGA;
+  document.getElementById("tabs").innerHTML = TABS.map((t,i) => `<button class="${i===tab ? "active" : ""}" onclick="go(${i})">${t}</button>`).join("");
+  document.getElementById("view").innerHTML = VIEWS[tab]();
+}
+
+document.getElementById("reset").onclick = () => { S = fresh(); tab = 0; render(); };
+setInterval(() => { const el = document.getElementById("ago"); if(el) el.textContent = Math.floor((Date.now()-S.updated)/1000); }, 1000);
+render();
+</script>
+</body>
+</html>
